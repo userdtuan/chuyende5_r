@@ -1,0 +1,188 @@
+library(shiny)
+library(shiny.semantic)
+library(semantic.dashboard)
+library(DT)
+library(knitr)
+
+# Preprocessing danych
+kq_thpt_raw <- read.csv("/Users/thanhtuan/Documents/Learning/Nam4ki1/ChuyenDe5/Dataset/data/diemthi2020.csv")[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_mon_ngoai_ngu'
+)]
+movies <- read.csv("movie_metadata.csv")[, c('movie_title', 'director_name', "budget","gross","country", "title_year", "imdb_score", "num_voted_users","color")
+]
+movies <- na.omit(movies)
+
+numericData = c("budget","gross","title_year", "budget", "imdb_score", "num_voted_users")
+
+############################################################################################################################################
+
+
+# UI
+sidebar <- dashboardSidebar(side = "left", size = "thin", color = "teal",
+                            sidebarMenu(
+                              menuItem(text = "General",
+                                       tabName = "general",
+                                       icon = icon("info circle")),
+                              menuItem(text = "Info",
+                                       tabName = "info",
+                                       icon = icon("info circle")),
+                              menuItem(text = "Film database",
+                                       tabName = "database",
+                                       icon = icon("bars")),
+                              menuItem(text = "Histogram",
+                                       tabName = "hist",
+                                       icon = icon("chart bar")),
+                              menuItem(text = "Clustering",
+                                       tabName = "clustering",
+                                       icon = icon("asterisk")),
+                              menuItem(text = "Regression",
+                                       tabName = "regression",
+                                       icon = icon("chart line")),
+                              menuItem(text = "Demo",
+                                       tabName = "demo",
+                                       icon = icon("chart line")),
+                              menuItem(text = "Raw Dataset",
+                                       tabName = "dataset_raw",
+                                       icon = icon("table"))
+                            ))
+source('tabs/tab_info.R')
+source('tabs/tab_database.R')
+source('tabs/tab_hist.R')
+source('tabs/tab_clustering.R')
+source('tabs/tab_regression.R')
+source('tabs/tab_demo.R')
+source('tabs/tab_dataset_raw.R')
+source('tabs/tab_general.R')
+body <- dashboardBody(
+  tabItems(
+    dataset_raw,
+    tab_info,
+    tab_database,
+    tab_hist,
+    tab_clustering,
+    tab_regression,
+    tab_demo,
+    tab_general
+  )
+)
+
+ui <- dashboardPage(
+  theme = "spacelab",
+  header = dashboardHeader(color = "blue"),
+  sidebar = sidebar,
+  body = body
+)
+
+
+server <- shinyServer(function(input, output) {
+  
+  # Dokumentacja  
+  getPage <- function() {
+    return(includeHTML("dokumentacja.html"))
+  }
+  output$inc <- renderUI({ getPage() })
+  
+  # Histogram
+  selectedData2 <- reactive({
+    movies[, input$choice_input]
+  })
+  
+  output$hist1 <- renderPlot({
+    bins <- seq(min(selectedData2()),
+                max(selectedData2()),
+                length.out = input$bins + 1)
+    
+    hist(selectedData2(),
+         xlab = input$choice_input,
+         xlim = c(floor(min(selectedData2())), ceiling(max(selectedData2()))),
+         breaks = bins,
+         main = "Number of films",
+         include.lowest = TRUE)
+  })
+  
+  # Clustering
+  selectedData <- reactive({
+    movies[, c(input$xcol, input$ycol)]
+  })
+  
+  clusters <- reactive({
+    kmeans(selectedData(), input$clusters)
+  })
+  
+  output$clusters_info <- renderText({
+    
+    all <- ""
+    for (i in 1:input$clusters)
+      all = paste(all, "Center ", i, " = (",
+                  format(round(clusters()$centers[i, 1], 2),
+                         nsmall = 2), "; ",
+                  format(round(clusters()$centers[i, 2], 2),
+                         nsmall = 2), ")\n", sep = "")
+    paste(all, sep = "\n")
+  })
+  
+  output$plot1 <- renderPlot({
+    palette(c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3",
+              "#FF7F00", "#FFFF33", "#A65628", "#F781BF"))
+    
+    par(mar = c(5.1, 4.1, 0, 1))
+    plot(selectedData(),
+         col = clusters()$cluster,
+         pch = 20,
+         cex = 3)
+    points(clusters()$centers, pch = 4, cex = 4, lwd = 4)
+  })
+  
+  # Datatable
+  output$moviesTable <- DT::renderDataTable(
+    DT::datatable(
+      rownames = FALSE,
+      colnames = c("Title", "Director", "Budget", "Gross",
+                   "Country", "Year", "IMDB Rating",
+                   "Number of Votes", "Color/BW"),
+      
+      filter = 'top',
+      options = list(
+        pageLength = 12, autoWidth = TRUE
+      ),
+      data <- movies
+    )
+  )
+  
+  # Regresja 
+  output$regression_summary <- renderPrint({
+    fit <- lm(movies[, input$ycol2] ~ movies[, input$xcol2])
+    names(fit$coefficients) <- c("Intercept", input$var2)
+    summary(fit)
+  })
+  
+  selectedData3 <- reactive({
+    movies[, c(input$xcol2, input$ycol2)]
+  })
+  output$scatterplot <- renderPlot({
+    plot(selectedData3(),
+         main = "Regression",
+         xlab = input$xcol2,
+         ylab = input$ycol2,
+         pch = 19)
+    abline(lm(movies[, input$ycol2] ~ movies[, input$xcol2]), col = "red")
+    lines(lowess(movies[, input$xcol2], movies[, input$ycol2]), col = "blue")
+    
+  })
+  #Dataset Raw
+  output$data_rawTable <- DT::renderDataTable(
+    DT::datatable(
+      rownames = FALSE,
+      colnames = c("SBD", "Ly", "Hoa", "Sinh",
+                   "Dia", "Su", "GDCD",
+                   "Toan", "Van", "Ngoai Ngu", "Ma Mon Ngoai Ngu"),
+      
+      filter = 'top',
+      options = list(
+        pageLength = 16, autoWidth = TRUE
+      ),
+      data <- kq_thpt_raw
+    )
+  )
+  #----
+})
+shinyApp(ui = ui, server = server)

@@ -1,0 +1,28 @@
+{
+    "id": "0DAF8B2C",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1670864919001.0,
+    "source_on_save": false,
+    "relative_order": 6,
+    "properties": {
+        "id": "a495aac22cc94fb38bb389dbc0cf6fae",
+        "name": "tab_demo",
+        "title": "tab_demo",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 4189021006120823933,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1670864919001,
+    "read_only": false,
+    "read_only_alternatives": []
+}
