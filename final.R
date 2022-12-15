@@ -79,15 +79,15 @@ body <- dashboardBody(
   tabItems(
     tab_pho_diem,
     tab_histogram,
-    # tab_pie_chart,
     tab_fixed_data,
     tab_raw_datasets,
+    tab_regression
+    # tab_pie_chart,
     # dataset_raw,
     # tab_info,
     # tab_database,
     # tab_hist,
     # tab_clustering,
-    tab_regression
     # tab_demo,
     # tab_general
   )
