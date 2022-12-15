@@ -1,24 +1,24 @@
-# source('functions/helper.R')
-# library(shiny)
-# library(shiny.semantic)
-# library(semantic.dashboard)
-# library(DT)
-# library(knitr)
-# library(dplyr)
-# library(ECharts2Shiny)
-# library(plotly)
+source('functions/helper.R')
+library(shiny)
+library(shiny.semantic)
+library(semantic.dashboard)
+library(DT)
+library(knitr)
+library(dplyr)
+library(ECharts2Shiny)
+library(plotly)
 
-# # Preprocessing danych
-# kq_thpt_raw <- read.csv("giua_ky/diemthi2020.csv")[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_mon_ngoai_ngu')]
-# list_tinh <- read.csv("giua_ky/listtinh.csv")
-# movies <- read.csv("movie_metadata.csv")[, c('movie_title', 'director_name', "budget","gross","country", "title_year", "imdb_score", "num_voted_users","color")
-# ]
-# movies <- na.omit(movies)
-# 
-# numericData = c("budget","gross","title_year", "budget", "imdb_score", "num_voted_users")
-# 
-# kq_thpt_fixed <- handle_missing(kq_thpt_raw,-1)
-# kq_thpt_fixed <- gan_ten_tinh(kq_thpt_fixed,list_tinh)[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_ngoai_ngu', 'Ten.Tinh')]
+# Preprocessing danych
+kq_thpt_raw <- read.csv("giua_ky/diemthi2020.csv")[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_mon_ngoai_ngu')]
+list_tinh <- read.csv("giua_ky/listtinh.csv")
+movies <- read.csv("movie_metadata.csv")[, c('movie_title', 'director_name', "budget","gross","country", "title_year", "imdb_score", "num_voted_users","color")
+]
+movies <- na.omit(movies)
+
+numericData = c("budget","gross","title_year", "budget", "imdb_score", "num_voted_users")
+
+kq_thpt_fixed <- handle_missing(kq_thpt_raw,-1)
+kq_thpt_fixed <- gan_ten_tinh(kq_thpt_fixed,list_tinh)[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_ngoai_ngu', 'Ten.Tinh')]
 
 ############################################################################################################################################
 
@@ -87,7 +87,7 @@ body <- dashboardBody(
     # tab_database,
     # tab_hist,
     # tab_clustering,
-    tab_regression,
+    tab_regression
     # tab_demo,
     # tab_general
   )
