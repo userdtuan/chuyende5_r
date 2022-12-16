@@ -1,6 +1,6 @@
 library(dplyr)
-link.diemthi <- "giua_ky/diemthi2020.csv"
-link.dstinh <- "giua_ky/listtinh.csv"
+link.diemthi <- "datasets/diemthi2020.csv"
+link.dstinh <- "datasets/listtinh.csv"
 ######## Function Island
 xet_vku_theo_tinh<-function(df.raw){
   #tao data frame moi co

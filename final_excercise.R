@@ -1,4 +1,5 @@
 source('functions/helper.R')
+source('functions/regression_functions.R')
 library(shiny)
 library(shiny.semantic)
 library(semantic.dashboard)
@@ -7,18 +8,20 @@ library(knitr)
 library(dplyr)
 library(ECharts2Shiny)
 library(plotly)
+library(shinycssloaders)
+library(performance)
 
-# Preprocessing danych
-kq_thpt_raw <- read.csv("giua_ky/diemthi2020.csv")[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_mon_ngoai_ngu')]
-list_tinh <- read.csv("giua_ky/listtinh.csv")
-movies <- read.csv("movie_metadata.csv")[, c('movie_title', 'director_name', "budget","gross","country", "title_year", "imdb_score", "num_voted_users","color")
+kq_thpt_raw <- read.csv("datasets/diemthi2020.csv")[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_mon_ngoai_ngu')]
+list_tinh <- read.csv("datasets/listtinh.csv")
+movies <- read.csv("datasets/movie_metadata.csv")[, c('movie_title', 'director_name', "budget","gross","country", "title_year", "imdb_score", "num_voted_users","color")
 ]
 movies <- na.omit(movies)
 
-numericData = c("budget","gross","title_year", "budget", "imdb_score", "num_voted_users")
-
 kq_thpt_fixed <- handle_missing(kq_thpt_raw,-1)
 kq_thpt_fixed <- gan_ten_tinh(kq_thpt_fixed,list_tinh)[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_ngoai_ngu', 'Ten.Tinh')]
+numericData = c('Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu')
+options(spinner.color="#0275D8", spinner.color.background="#ffffff", spinner.size=1)
+hoiquy_dat <- kq_thpt_fixed[,c('Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu')]
 
 ############################################################################################################################################
 
@@ -37,8 +40,11 @@ sidebar <- dashboardSidebar(side = "left", size = "thin", color = "teal",
                               menuItem(text = "Dữ liệu thô",
                                        tabName = "raw_datasets",
                                        icon = icon("table")),
-                              menuItem(text = "Regression",
-                                       tabName = "regression",
+                              # menuItem(text = "Regression",
+                              #          tabName = "regression",
+                              #          icon = icon("chart line")),
+                              menuItem(text = "Hồi quy tuyến tính",
+                                       tabName = "hoi_quy",
                                        icon = icon("chart line"))
                               # menuItem(text = "General",
                               #          tabName = "general",
@@ -62,26 +68,20 @@ sidebar <- dashboardSidebar(side = "left", size = "thin", color = "teal",
                               #          tabName = "dataset_raw",
                               #          icon = icon("table"))
                             ))
-source('tabs/tab_pho_diem.R')
-source('tabs/tab_info.R')
 source('tabs/tab_raw_datasets.R')
-source('tabs/tab_database.R')
-source('tabs/tab_hist.R')
-source('tabs/tab_clustering.R')
-source('tabs/tab_regression.R')
-source('tabs/tab_demo.R')
-source('tabs/tab_dataset_raw.R')
-source('tabs/tab_general.R')
+# source('tabs/tab_regression.R')
 source('tabs/tab_fixed_data.R')
-source('tabs/tab_pie_chart.R')
 source('tabs/tab_histogram.R')
+source('tabs/tab_pho_diem.R')
+source('tabs/tab_hoi_quy.R')
 body <- dashboardBody(
   tabItems(
     tab_pho_diem,
     tab_histogram,
     tab_fixed_data,
     tab_raw_datasets,
-    tab_regression
+    # tab_regression,
+    tab_hoi_quy
     # tab_pie_chart,
     # dataset_raw,
     # tab_info,
@@ -234,15 +234,6 @@ server <- shinyServer(function(input, output) {
   output$pie_khoithi <- renderPieChart(data = data.frame(name,value), div_id = "pie_khoithi")
   
   #---
-  # reactiveMon <- reactiveValues()
-  # reactiveMon$a <- 'Toan'
-  # aes(
-  #   x = .data[[input$bo]],
-  #   text = after_stat(paste(
-  #     "Category: ", categories()[x],
-  #     "<br>Count: ", count
-  #   ))
-  # )
   tb_pho_diem <- reactive( {pho_diem(kq_thpt_fixed,input$mon)} )
   output$pho_diem <- renderPlotly({
     ggplot(data = tb_pho_diem(), aes(x = reorder(name, -name), y = value,
@@ -260,5 +251,76 @@ server <- shinyServer(function(input, output) {
     ggplotly(tooltip = "text")
   })
   
+  #--
+  bienx <- reactiveVal(numericData[[1]])
+  bieny <- reactiveVal(numericData[[2]])
+  output$value <- renderText({
+    ""           
+  })
+  observeEvent(input$apply, {
+    x <- input$bien_x  
+    y <- input$bien_y
+    bienx(x)
+    bieny(y)
+  })
+  hoiquy2_lm <- reactive({
+    lm(hoiquy_dat[, bieny()] ~ hoiquy_dat[, bienx()])
+  })
+  output$hoiquy2_summary <- renderPrint({
+    fit <- hoiquy2_lm()
+    names(fit$coefficients) <- c("Intercept", input$bien_y)
+    # fit$coefficients
+    summary(fit)
+  })
+
+  hoiquy2_data <- reactive({
+    hoiquy_dat[, c(bienx(), bieny())]
+  })
+  output$hoiquy2_bieudo <- renderPlot({
+    plot(hoiquy2_data(),
+         main = "Regression",
+         xlab = bienx(),
+         ylab = bieny(),
+         pch = 19)
+    abline(hoiquy2_lm(), col = "red")
+    lines(lowess(hoiquy_dat[, bienx()], hoiquy_dat[, bieny()]), col = "blue")
+  })
+  f <- forward(hoiquy_dat)
+  output$forw <- renderPrint({
+    f$coefficients
+  })
+  
+  # output$backw <- renderPrint({
+  #   f <- backward(hoiquy_dat)
+  #   f$coefficients
+  # })
+  # 
+  # output$bth <- renderPrint({
+  #   f <- both(hoiquy_dat)
+  #   f$coefficients
+  # })
+  output$ranking <- renderPrint({
+    compare_performance(f, hoiquy2_lm, rank = TRUE)
+  })
+  # output$ranking <- compare_performance(output$forw, output$backw, output$bth, hoiquy2_lm, rank = TRUE)
+  
 })
 shinyApp(ui = ui, server = server)
+# forw <- forward(hoiquy_dat)
+# forw$anova
+# forw$coefficients
+# 
+# back <- backward(hoiquy_dat)
+# back$anova
+# back$coefficients
+# 
+# bth <- both(hoiquy_dat)
+# bth$anova
+# bth$coefficients
+# 
+# library(performance)
+# a<-compare_performance(forw, back, bth, rank = TRUE)
+# a$Name
+
+
+

@@ -7,7 +7,7 @@ fluidRow(
                 tabBox(color = "blue", width = 16,
                        collapsible = FALSE,
                        tabs = list(
-                         list(menu = "Danh sách tỉnh", content = dataTableOutput("tinhTable")),
-                         list(menu = "Điểm thi THPT QG", content = dataTableOutput("data_rawTable"))
+                         list(menu = "Danh sách tỉnh", content = withSpinner( dataTableOutput("tinhTable"),type=1)),
+                         list(menu = "Điểm thi THPT QG", content = withSpinner( dataTableOutput("data_rawTable"),type=1))
                        )))
  )
