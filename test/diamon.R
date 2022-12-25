@@ -21,4 +21,11 @@ fo <- forward(d5)
 ba <- backward(d5)
 bo <- both(d5)
 library(performance)
-compare_performance(forward, backward, both, multi, total,one, rank = TRUE)
+compare_performance(fo, ba, bo, rank = TRUE)
+
+predict_tb <- mtcars
+index <- grep("mpg", colnames(d5))
+predict_tb <- predict_tb[,-index]
+a<-predict(object = ba,     # The regression model
+        newdata = predict_tb)   
+d5["predict"] <- a

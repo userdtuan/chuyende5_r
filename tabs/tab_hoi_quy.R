@@ -30,15 +30,23 @@ fluidRow(
               ,
               column(width = 16,
                      box(title = "Stepwise Regression",
+                     titlePanel("Ranking"),
+                     withSpinner(verbatimTextOutput("ranking"), type = 1),
                      titlePanel("Forward Stepwise Selection"),
                      withSpinner(verbatimTextOutput("forw"), type = 1),
                      titlePanel("Backward Stepwise Selection"),
                      withSpinner(verbatimTextOutput("backw"), type = 1),
                      titlePanel("Both Stepwise Selection"),
                      withSpinner(verbatimTextOutput("bothw"), type = 1),
-                     titlePanel("Ranking"),
-                    withSpinner(verbatimTextOutput("ranking"), type = 1)
                      )
-              )
-            )
+              ),
+            ),
+box(title = "Dự đoán",
+                width = 16,
+                color = "blue",
+                selectInput(inputId =  "hoiquy_choose", choices = c('Forward','Backward','Both','Multi'),
+                                label = "Chọn mô hình", selected = "Forward"),
+                                textOutput("test_hoiquy"),
+                withSpinner(DT::dataTableOutput("tb_after_predict")),
+                ),
     )

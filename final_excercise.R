@@ -13,9 +13,6 @@
 # 
 # kq_thpt_raw <- read.csv("datasets/diemthi2020.csv")[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_mon_ngoai_ngu')]
 # list_tinh <- read.csv("datasets/listtinh.csv")
-# # movies <- read.csv("datasets/movie_metadata.csv")[, c('movie_title', 'director_name', "budget","gross","country", "title_year", "imdb_score", "num_voted_users","color")
-# # ]
-# # movies <- na.omit(movies)
 # 
 # kq_thpt_fixed <- handle_missing(kq_thpt_raw,-1)
 # kq_thpt_fixed <- gan_ten_tinh(kq_thpt_fixed,list_tinh)[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_ngoai_ngu', 'Ten.Tinh')]
@@ -269,8 +266,8 @@ server <- shinyServer(function(input, output) {
   output$hoiquy2_summary <- renderPrint({
     fit <- hoiquy2_lm()
     names(fit$coefficients) <- c("Intercept", input$bien_y)
-    # fit$coefficients
     summary(fit)
+    # fit$coefficients
   })
 
   hoiquy2_data <- reactive({
@@ -307,6 +304,32 @@ server <- shinyServer(function(input, output) {
   output$ranking <- renderPrint({
     compare_performance(forward_model,backward_model,both_model, hoiquy2_lm(), rank = TRUE)
   })
+  
+  output$test_hoiquy <- renderPrint({
+    input$hoiquy_choose
+  })
+  hoiquy_model <- reactive({
+  })
+  
+  predict_tb <- hoiquy_dat
+  index <- grep("Toan", colnames(hoiquy_dat))
+  predict_tb <- predict_tb[,-index]
+  a<-predict(object = backward_model,     # The regression model
+             newdata = predict_tb)   
+  hoiquy_dat["predict"] <- a
+  output$tb_after_predict <- DT::renderDataTable(
+    DT::datatable(
+      rownames = FALSE,
+      # colnames = c("Ngoại ngữ", "Số lượng"),
+      
+      filter = 'top',
+      options = list(
+        pageLength = 10, autoWidth = TRUE
+      ),
+      data <- hoiquy_dat
+    )
+  )
+  
 })
 shinyApp(ui = ui, server = server)
 
