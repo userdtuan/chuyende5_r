@@ -1,28 +1,28 @@
-source('functions/helper.R')
-source('functions/regression_functions.R')
-library(shiny)
-library(shiny.semantic)
-library(semantic.dashboard)
-library(DT)
-library(knitr)
-library(dplyr)
-library(ECharts2Shiny)
-library(plotly)
-library(shinycssloaders)
-library(performance)
-
-kq_thpt_raw <- read.csv("datasets/diemthi2020.csv")[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_mon_ngoai_ngu')]
-list_tinh <- read.csv("datasets/listtinh.csv")
-movies <- read.csv("datasets/movie_metadata.csv")[, c('movie_title', 'director_name', "budget","gross","country", "title_year", "imdb_score", "num_voted_users","color")
-]
-movies <- na.omit(movies)
-
-kq_thpt_fixed <- handle_missing(kq_thpt_raw,-1)
-kq_thpt_fixed <- gan_ten_tinh(kq_thpt_fixed,list_tinh)[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_ngoai_ngu', 'Ten.Tinh')]
-numericData = c('Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu')
-options(spinner.color="#0275D8", spinner.color.background="#ffffff", spinner.size=1)
-hoiquy_dat <- kq_thpt_fixed[,c('Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu')]
-
+# source('functions/helper.R')
+# source('functions/regression_functions.R')
+# library(shiny)
+# library(shiny.semantic)
+# library(semantic.dashboard)
+# library(DT)
+# library(knitr)
+# library(dplyr)
+# library(ECharts2Shiny)
+# library(plotly)
+# library(shinycssloaders)
+# library(performance)
+# 
+# kq_thpt_raw <- read.csv("datasets/diemthi2020.csv")[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_mon_ngoai_ngu')]
+# list_tinh <- read.csv("datasets/listtinh.csv")
+# # movies <- read.csv("datasets/movie_metadata.csv")[, c('movie_title', 'director_name', "budget","gross","country", "title_year", "imdb_score", "num_voted_users","color")
+# # ]
+# # movies <- na.omit(movies)
+# 
+# kq_thpt_fixed <- handle_missing(kq_thpt_raw,-1)
+# kq_thpt_fixed <- gan_ten_tinh(kq_thpt_fixed,list_tinh)[,c('sbd','Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu', 'Ma_ngoai_ngu', 'Ten.Tinh')]
+# numericData = c('Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu')
+# options(spinner.color="#0275D8", spinner.color.background="#ffffff", spinner.size=1)
+# hoiquy_dat <- kq_thpt_fixed[,c('Li','Hoa','Sinh','Su','Dia','GDCD','Toan','Van', 'Ngoai_ngu')]
+# hoiquy_dat <- head(hoiquy_dat,10000)
 ############################################################################################################################################
 
 # UI
@@ -252,8 +252,8 @@ server <- shinyServer(function(input, output) {
   })
   
   #--
-  bienx <- reactiveVal(numericData[[1]])
-  bieny <- reactiveVal(numericData[[2]])
+  bienx <- reactiveVal()
+  bieny <- reactiveVal()
   output$value <- renderText({
     ""           
   })
@@ -264,7 +264,7 @@ server <- shinyServer(function(input, output) {
     bieny(y)
   })
   hoiquy2_lm <- reactive({
-    lm(hoiquy_dat[, bieny()] ~ hoiquy_dat[, bienx()])
+    lm(hoiquy_dat[, bieny()] ~ hoiquy_dat[, bienx()], data = hoiquy_dat)
   })
   output$hoiquy2_summary <- renderPrint({
     fit <- hoiquy2_lm()
@@ -285,42 +285,30 @@ server <- shinyServer(function(input, output) {
     abline(hoiquy2_lm(), col = "red")
     lines(lowess(hoiquy_dat[, bienx()], hoiquy_dat[, bieny()]), col = "blue")
   })
-  f <- forward(hoiquy_dat)
+  forward_model <- forward(hoiquy_dat)
   output$forw <- renderPrint({
-    f$coefficients
+    # forward_model$coefficients
+    summary(forward_model)
   })
   
-  # output$backw <- renderPrint({
-  #   f <- backward(hoiquy_dat)
-  #   f$coefficients
-  # })
-  # 
-  # output$bth <- renderPrint({
-  #   f <- both(hoiquy_dat)
-  #   f$coefficients
-  # })
+  backward_model <- backward(hoiquy_dat)
+  output$backw <- renderPrint({
+    # backward_model$coefficients
+    summary(backward_model)
+  })
+  
+  both_model <- both(hoiquy_dat)
+  output$bothw <- renderPrint({
+    summary(both_model)
+    # both_model$coefficients
+  })
+  
+  two <- lm(Toan ~ Li + Hoa, data = hoiquy_dat)
   output$ranking <- renderPrint({
-    compare_performance(f, hoiquy2_lm, rank = TRUE)
+    compare_performance(forward_model,backward_model,both_model, hoiquy2_lm(), rank = TRUE)
   })
-  # output$ranking <- compare_performance(output$forw, output$backw, output$bth, hoiquy2_lm, rank = TRUE)
-  
 })
 shinyApp(ui = ui, server = server)
-# forw <- forward(hoiquy_dat)
-# forw$anova
-# forw$coefficients
-# 
-# back <- backward(hoiquy_dat)
-# back$anova
-# back$coefficients
-# 
-# bth <- both(hoiquy_dat)
-# bth$anova
-# bth$coefficients
-# 
-# library(performance)
-# a<-compare_performance(forw, back, bth, rank = TRUE)
-# a$Name
 
 
 

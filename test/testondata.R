@@ -77,3 +77,7 @@ compare_performance(forward, backward, both, multi, total,one, rank = TRUE)
 # backward |    lm | 0.850 |     0.834 | 2.300 | 2.459 |       0.496 |        0.496 |       0.496 |           100.00%
 # forward  |    lm | 0.843 |     0.826 | 2.349 | 2.512 |       0.252 |        0.252 |       0.252 |             0.00%
 # both     |    lm | 0.843 |     0.826 | 2.349 | 2.512 |       0.252 |        0.252 |       0.252 |             0.00%
+
+
+
+

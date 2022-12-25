@@ -23,17 +23,21 @@ fluidRow(
                 )
               ),
               column(width = 8,
-                     box(title = "Summary",
+                     box(title = "Two Value Summary",
                      withSpinner(verbatimTextOutput("hoiquy2_summary"), type = 1)
                      )
               )
               ,
               column(width = 16,
-                     box(title = "Summary",
+                     box(title = "Stepwise Regression",
+                     titlePanel("Forward Stepwise Selection"),
                      withSpinner(verbatimTextOutput("forw"), type = 1),
-                    # withSpinner( verbatimTextOutput("backw"), type = 1),
-                    # withSpinner( verbatimTextOutput("bth"), type = 1),
-                    withSpinner( verbatimTextOutput("ranking"), type = 1)
+                     titlePanel("Backward Stepwise Selection"),
+                     withSpinner(verbatimTextOutput("backw"), type = 1),
+                     titlePanel("Both Stepwise Selection"),
+                     withSpinner(verbatimTextOutput("bothw"), type = 1),
+                     titlePanel("Ranking"),
+                    withSpinner(verbatimTextOutput("ranking"), type = 1)
                      )
               )
             )
