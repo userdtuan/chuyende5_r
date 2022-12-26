@@ -1,24 +1,34 @@
-forward <- function(d5) {
-  intercept_only <- lm(mpg ~ 1, data=d5)
-  all <- lm(mpg ~ ., data=d5)
-  forward <- step(intercept_only, direction='forward', scope=formula(all), trace=0)
-  return(forward)
+# Load the shiny library
+library(shiny)
+
+# Define the UI for the app
+ui <- fluidPage(
+  # Use the row function to create a row for the input fields
+  row(
+    # Use the column function to create four equal-sized columns
+    column(width = 3,
+           # Add the first text input field
+           textInput("input_text_1", "Enter text 1:", value = "")
+    ),
+    column(width = 3,
+           # Add the second text input field
+           textInput("input_text_2", "Enter text 2:", value = "")
+    ),
+    column(width = 3,
+           # Add the third text input field
+           textInput("input_text_3", "Enter text 3:", value = "")
+    ),
+    column(width = 3,
+           # Add the fourth text input field
+           textInput("input_text_4", "Enter text 4:", value = "")
+    )
+  )
+)
+
+# Define the server for the app
+server <- function(input, output) {
+  # No server logic is needed for this simple example
 }
-backward <- function(d5) {
-  intercept_only <- lm(mpg ~ 1, data=d5)
-  all <- lm(mpg ~ ., data=d5)
-  backward <- step(all, direction='backward', scope=formula(all), trace=0)
-  return(backward)
-}
-both <- function(d5) {
-  intercept_only <- lm(mpg ~ 1, data=d5)
-  all <- lm(mpg ~ ., data=d5)
-  both <- step(intercept_only, direction='both', scope=formula(all), trace=0)
-  return(both)
-}
-d5 <- mtcars
-fo <- forward(d5)
-ba <- backward(d5)
-bo <- both(d5)
-library(performance)
-compare_performance(forward, backward, both, multi, total,one, rank = TRUE)
+
+# Run the Shiny app
+shinyApp(ui = ui, server = server)

@@ -49,4 +49,46 @@ box(title = "Dự đoán",
                                 textOutput("test_hoiquy"),
                 withSpinner(DT::dataTableOutput("tb_after_predict")),
                 ),
+fluidRow(
+  column(width = 4,
+           # Add the first text input field
+           numericInput("mon_1", "Nhập điểm Lý:", value = hoiquy_dat$Li[1])
+    ),
+    column(width = 4,
+           # Add the second text input field
+           numericInput("mon_2", "Nhập điểm Hoá:", value = hoiquy_dat$Hoa[1])
+    ),
+    column(width = 4,
+           # Add the third text input field
+           numericInput("mon_3", "Nhập điểm Sinh:", value = hoiquy_dat$Sinh[1])
+    ),
+    column(width = 4,
+           # Add the fourth text input field
+           numericInput("mon_4", "Nhập điểm Sử:", value = hoiquy_dat$Su[1])
+    ),
+    column(width = 4,
+           # Add the first text input field
+           numericInput("mon_5", "Nhập điểm Địa:", value = hoiquy_dat$Dia[1])
+    ),
+    column(width = 4,
+           # Add the second text input field
+           numericInput("mon_6", "Nhập điểm GDCD:", value = hoiquy_dat$GDCD[1])
+    ),
+    column(width = 4,
+           # Add the third text input field
+           numericInput("mon_7", "Nhập điểm Văn:", value = hoiquy_dat$Van[1])
+    ),
+    column(width = 4,
+           # Add the fourth text input field
+           numericInput("mon_8", "Nhập điểm Ngoại Ngữ:", value = hoiquy_dat$Ngoai_ngu[1]),
+    ),
+    column(width = 10,
+           # Add the fourth text input field
+           actionButton("predict", "Dự đoán điểm Toán"),
+    ),
+    column(width = 10,
+           # Add the fourth text input field
+           textOutput("predict_toan")
+    )
+)
     )

@@ -170,9 +170,9 @@ server <- shinyServer(function(input, output) {
   output$phan_bo_theo_tinh <- renderPlotly({
     ggplot(data = df.pie_tinh, aes(x = reorder(name, -name), y = value
                                    ,text = after_stat(paste(
-                                          "Tỉnh: ", df.pie_tinh[x,1],
-                                          "<br>Count: ", df.pie_tinh[x,2]
-    )))) +
+                                     "Tỉnh: ", df.pie_tinh[x,1],
+                                     "<br>Count: ", df.pie_tinh[x,2]
+                                   )))) +
       geom_bar(stat = 'identity',fill = "cornflowerblue", color = "black") +
       labs(
         title = "Số thí sinh phân bố theo tỉnh",
@@ -234,10 +234,10 @@ server <- shinyServer(function(input, output) {
   tb_pho_diem <- reactive( {pho_diem(kq_thpt_fixed,input$mon)} )
   output$pho_diem <- renderPlotly({
     ggplot(data = tb_pho_diem(), aes(x = reorder(name, -name), y = value,
-                                                         text = after_stat(paste(
-                                                           "Grade: ", tb_pho_diem()[x,1],
-                                                           "<br>Count: ", tb_pho_diem()[x,2]
-                                                         )))) +
+                                     text = after_stat(paste(
+                                       "Grade: ", tb_pho_diem()[x,1],
+                                       "<br>Count: ", tb_pho_diem()[x,2]
+                                     )))) +
       geom_bar(stat = 'identity', fill = "cornflowerblue", color = "black") +
       labs(
         title = "Số thí sinh phân bố theo môn ",
@@ -269,7 +269,7 @@ server <- shinyServer(function(input, output) {
     summary(fit)
     # fit$coefficients
   })
-
+  
   hoiquy2_data <- reactive({
     hoiquy_dat[, c(bienx(), bieny())]
   })
@@ -300,36 +300,97 @@ server <- shinyServer(function(input, output) {
     # both_model$coefficients
   })
   
-  two <- lm(Toan ~ Li + Hoa, data = hoiquy_dat)
   output$ranking <- renderPrint({
     compare_performance(forward_model,backward_model,both_model, hoiquy2_lm(), rank = TRUE)
   })
-  
+
   output$test_hoiquy <- renderPrint({
     input$hoiquy_choose
   })
+
   hoiquy_model <- reactive({
+    model <- forward_model
+    if(input$hoiquy_choose=="Forward"){
+      model <- forward_model
+    }
+    else if(input$hoiquy_choose=="Backward"){
+      model <- backward_model
+    }
+    else if(input$hoiquy_choose=="Both"){
+      model <- both_model
+    }
+    else if(input$hoiquy_choose=="Multi"){
+      model <- hoiquy2_lm()
+    }
+    
+    predict_tb <- hoiquy_dat
+    index <- grep("Toan", colnames(hoiquy_dat))
+    predict_tb <- predict_tb[,-index]
+    a<-predict(object = model,     
+               newdata = predict_tb)
+    predict_df <- hoiquy_dat
+    predict_df["predict"] <- a
+    predict_df
   })
-  
-  predict_tb <- hoiquy_dat
-  index <- grep("Toan", colnames(hoiquy_dat))
-  predict_tb <- predict_tb[,-index]
-  a<-predict(object = backward_model,     # The regression model
-             newdata = predict_tb)   
-  hoiquy_dat["predict"] <- a
+
+  # predict_tb <- hoiquy_dat
+  # index <- grep("Toan", colnames(hoiquy_dat))
+  # predict_tb <- predict_tb[,-index]
+  # a<-predict(object = backward_model,     # The regression model
+  #            newdata = predict_tb)
+  # hoiquy_dat["predict"] <- a
+
   output$tb_after_predict <- DT::renderDataTable(
     DT::datatable(
       rownames = FALSE,
       # colnames = c("Ngoại ngữ", "Số lượng"),
-      
+
       filter = 'top',
       options = list(
         pageLength = 10, autoWidth = TRUE
       ),
-      data <- hoiquy_dat
+      data <- hoiquy_model()
     )
   )
+  hoiquy_value <- reactiveVal("0")
+  output$predict_toan <- renderText({
+    hoiquy_value()
+  })
+  predict_tb <- reactive({
+    predict_toan <- data.frame(Li = c(input$mon_1),
+                               Hoa = c(input$mon_2),
+                               Sinh = c(input$mon_3),
+                               Su = c(input$mon_4),
+                               Dia = c(input$mon_5),
+                               GDCD = c(input$mon_6),
+                               Van = c(input$mon_7),
+                               Ngoai_ngu = c(input$mon_8)
+    )
+    predict_toan
+  })
+  observeEvent(input$predict, {
+    model <- forward_model
+    if(input$hoiquy_choose=="Forward"){
+      model <- forward_model
+    }
+    else if(input$hoiquy_choose=="Backward"){
+      model <- backward_model
+    }
+    else if(input$hoiquy_choose=="Both"){
+      model <- both_model
+    }
+    else if(input$hoiquy_choose=="Multi"){
+      model <- hoiquy2_lm()
+    }
+
+
+    a<-predict(object = model,
+               newdata = predict_tb())
+    
+    hoiquy_value(a[1])
+  })
   
+
 })
 shinyApp(ui = ui, server = server)
 
